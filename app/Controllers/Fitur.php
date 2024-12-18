@@ -10,96 +10,76 @@ use App\Models\UserModel;
 
 class Fitur extends BaseController
 {
+    protected $session;
+    protected $classesModel;
+    protected $classMembersModel;
+
+    public function __construct()
+    {
+        $this->session = \Config\Services::session();
+        $this->classesModel = new ClassModel();
+        $this->classMembersModel = new AnggotaModel();
+    }
     public function nampilKelas()
     {
-        return view('fitur/gabung_kelas');
+        // Check if user is logged in and has appropriate role
+        if (!$this->session->get('is_login') || 
+            !in_array($this->session->get('role'), ['pegawai', 'pengajar'])) {
+            return redirect()->to('login');
+        }
+
+        return view('fitur/gabung_kelas', [
+            'join_message' => $this->session->getFlashdata('join_message') ?? ''
+        ]);
     }
     
     public function gabungKelas()
-{
-    $session = session();
-
-    // Cek apakah user sudah login dan memiliki role 'pengajar' atau 'pegawai'
-    if (!$session->get('is_login') || !in_array($session->get('role'), ['pengajar', 'pegawai'])) {
-        return redirect()->to('/login')->with('error', 'Anda harus login terlebih dahulu.');
-    }
-
-    $joinMessage = '';
-    $messageType = 'error'; // Default to error, will change to success if operation succeeds
-
-    if ($this->request->getMethod() === 'post') {
-        // Ambil id user dari session
-        $userId = $session->get('user_id');
-        $role = $session->get('role');
-        $classCode = $this->request->getPost('class_code');
-
-        // Validasi input
-        $validation = \Config\Services::validation();
-        $validation->setRules([
-            'class_code' => 'required|min_length[5]|max_length[10]'
-        ]);
-
-        if (!$validation->withRequest($this->request)->run()) {
-            // Jika validasi gagal
-            $joinMessage = $validation->getErrors()['class_code'] ?? 'Kode kelas tidak valid';
-            return redirect()->back()->with('error', $joinMessage);
+    {
+        // Validate CSRF token
+        if (!$this->request->is('post')) {
+            return redirect()->back()->with('join_message', 'Invalid request method');
         }
 
-        // Inisialisasi model
-        $classModel = new ClassModel();
-        $classMemberModel = new AnggotaModel();
-        $userModel = new UserModel();
+        // Check if user is logged in
+        $userId = $this->session->get('user_id');
+        $userRole = $this->session->get('role');
+
+        if (!$userId || !in_array($userRole, ['pegawai', 'pengajar'])) {
+            return redirect()->to('login')->with('join_message', 'Silakan login kembali');
+        }
+
+        // Validate class code
+        $classCode = $this->request->getPost('class_code');
+        if (empty($classCode)) {
+            return redirect()->back()->with('join_message', 'Kode kelas tidak boleh kosong');
+        }
+
+        // Find the class
+        $classData = $this->classesModel->findByClassCode($classCode);
+        if (!$classData) {
+            return redirect()->back()->with('join_message', 'Kode kelas tidak valid');
+        }
+
+        // Check if already a member
+        if ($this->classMembersModel->isMemberOfClass($userId, $classData['id'], $userRole)) {
+            return redirect()->back()->with('join_message', 'Anda sudah tergabung di kelas ini');
+        }
+
+        // Add user to class members
+        $memberData = [
+            'pegawai_id' => $userId,
+            'class_id' => $classData['id'],
+            'role' => $userRole
+        ];
 
         try {
-            // Cek apakah kelas ada berdasarkan kode kelas
-            $class = $classModel->where('class_code', $classCode)->first();
-
-            // Jika kelas tidak ditemukan
-            if (!$class) {
-                return redirect()->back()->with('error', 'Kode kelas tidak ditemukan.');
-            }
-
-            // Cek apakah user sudah terdaftar
-            $user = $userModel->find($userId);
-            if (!$user) {
-                return redirect()->back()->with('error', 'Pengguna tidak ditemukan.');
-            }
-
-            // Cek apakah user sudah bergabung dengan kelas ini
-            $existingMembership = $classMemberModel->where('pegawai_id', $userId)
-                ->where('class_id', $class['id'])
-                ->where('role', $role)
-                ->first();
-
-            if ($existingMembership) {
-                return redirect()->back()->with('warning', 'Anda sudah tergabung di kelas ini.');
-            }
-
-            // Tambahkan user ke kelas
-            $result = $classMemberModel->insert([
-                'pegawai_id' => $userId,
-                'class_id' => $class['id'],
-                'role' => $role,
-            ]);
-
-            // Cek apakah insert berhasil
-            if ($result) {
-                return redirect()->back()->with('success', 'Berhasil bergabung ke kelas!');
-            } else {
-                return redirect()->back()->with('error', 'Gagal bergabung ke kelas. Silakan coba lagi.');
-            }
-
+            $this->classMembersModel->insert($memberData);
+            return redirect()->back()->with('join_message', 'Berhasil bergabung ke kelas!');
         } catch (\Exception $e) {
-            // Tangani kesalahan yang tidak terduga
-            log_message('error', 'Gabung Kelas Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan sistem. Silakan hubungi administrator.');
+            // Log error if needed
+            return redirect()->back()->with('join_message', 'Gagal bergabung ke kelas: ' . $e->getMessage());
         }
     }
-
-    // Jika bukan metode POST
-    return redirect()->back()->with('error', 'Metode permintaan tidak valid.');
-}
-
     
 
 

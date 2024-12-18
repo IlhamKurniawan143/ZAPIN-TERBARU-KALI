@@ -6,17 +6,21 @@
     <div class="content">
         <div class="card">
             <h2 class="card-title">Gabung Kelas</h2>
-            <form action="<?= base_url('fitur/gabungKelas') ?>" method="post" class="form-container">
-                <?= csrf_field() ?>
-                <div class="input-group">
-                    <label for="class_code" class="input-label">Masukkan Kode Kelas</label>
-                    <input type="text" name="class_code" id="class_code" class="input-field" placeholder="Kode Kelas"
-                        required>
+            <?php if (session()->getFlashdata('join_message')): ?>
+                <div class="alert">
+                    <?= session()->getFlashdata('join_message') ?>
                 </div>
-                <div class="input-group">
-                    <button type="submit" name="join_class" class="btn btn-primary">Gabung Kelas</button>
-                </div>
-            </form>
+            <?php endif; ?>
+            <form action="<?= base_url('fitur/gabungKelas') ?>" method="post" class="form-container"> 
+                <?= csrf_field() ?> 
+                <div class="input-group"> 
+                    <label for="class_code" class="input-label">Masukkan Kode Kelas</label> 
+                    <input type="text" name="class_code" id="class_code" class="input-field" placeholder="Kode Kelas" required> 
+                </div> 
+                <div class="input-group"> 
+                    <button type="submit" name="join_class" class="btn btn-primary">Gabung Kelas</button> 
+                </div> 
+            </form> 
         </div>
     </div>
 </div>

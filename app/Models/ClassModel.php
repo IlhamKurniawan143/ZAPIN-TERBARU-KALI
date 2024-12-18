@@ -26,47 +26,52 @@ class ClassModel extends Model
     }
 
 
-    public function gabungkelas($user_id, $class_code, $role)
-    {
-        // periksa apakah kelas itu ada
-        $class = $this->where('class_code', $class_code)->first();
+    // public function gabungkelas($user_id, $class_code, $role)
+    // {
+    //     // periksa apakah kelas itu ada
+    //     $class = $this->where('class_code', $class_code)->first();
 
-        if (!$class) {
-            return ['status' => false, 'message' => 'Kode kelas tidak valid!'];
-        }
+    //     if (!$class) {
+    //         return ['status' => false, 'message' => 'Kode kelas tidak valid!'];
+    //     }
 
-        $class_id = $class['id'];
+    //     $class_id = $class['id'];
 
-        // periksa apakah user sudah terdaftar di kelas ini
-        $db = \Config\Database::connect();
-        $builder = $db->table('class_members');
-        $existingMember = $builder->where([
-            'class_id' => $class_id,
-            'pegawai_id' => $user_id,
-            'role' => $role
-        ])->get()->getRow();
+    //     // periksa apakah user sudah terdaftar di kelas ini
+    //     $db = \Config\Database::connect();
+    //     $builder = $db->table('class_members');
+    //     $existingMember = $builder->where([
+    //         'class_id' => $class_id,
+    //         'pegawai_id' => $user_id,
+    //         'role' => $role
+    //     ])->get()->getRow();
 
-        if ($existingMember) {
-            return ['status' => false, 'message' => 'Anda sudah terdaftar di kelas ini!'];
-        }
+    //     if ($existingMember) {
+    //         return ['status' => false, 'message' => 'Anda sudah terdaftar di kelas ini!'];
+    //     }
 
-        // $builder->where('class_id', $class_id);
-        // $builder->where('pegawai_id', $user_id);
-        // $builder->where('role', $role);
-        // $builder->select('id');
-        // $result = $builder->get()->getRow();
+    //     // $builder->where('class_id', $class_id);
+    //     // $builder->where('pegawai_id', $user_id);
+    //     // $builder->where('role', $role);
+    //     // $builder->select('id');
+    //     // $result = $builder->get()->getRow();
 
-        // if ($result) {
-        // }
+    //     // if ($result) {
+    //     // }
         
-        // jika tidak ada, tambahkan user ke kelas / menambahkan pengguna ke tabel class_members
-        $builder->insert([
-            'class_id' => $class_id,   
-            'pegawai_id' => $user_id,
-            'role' => $role
-        ]);
+    //     // jika tidak ada, tambahkan user ke kelas / menambahkan pengguna ke tabel class_members
+    //     $builder->insert([
+    //         'class_id' => $class_id,   
+    //         'pegawai_id' => $user_id,
+    //         'role' => $role
+    //     ]);
 
-        return ['status' => true, 'message' => 'Berhasil bergabung ke kelas!'];
+    //     return ['status' => true, 'message' => 'Berhasil bergabung ke kelas!'];
+    // }
+
+    public function findByClassCode($classCode)
+    {
+        return $this->where('class_code', $classCode)->first();
     }
 
     public function getClassDetail($class_id)

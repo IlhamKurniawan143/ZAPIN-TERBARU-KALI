@@ -17,4 +17,13 @@ class AnggotaModel extends Model
             ->where('class_members.class_id', $class_id)
             ->findAll();
     }
+
+    public function isMemberOfClass($userId, $classId, $role)
+    {
+        return $this->where([
+            'pegawai_id' => $userId,
+            'class_id' => $classId,
+            'role' => $role
+        ])->countAllResults() > 0;
+    }
 }
