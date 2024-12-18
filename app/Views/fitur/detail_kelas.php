@@ -109,7 +109,8 @@
     }
 
     #tasks ul li .btn:hover {
-        background-color: #32b1e0;
+        background-color: #45a049;
+        text-decoration: none;
     }
 
     .tab-content {
