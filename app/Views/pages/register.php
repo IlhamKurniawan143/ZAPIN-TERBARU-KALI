@@ -51,9 +51,9 @@
                 <div class="input-group">
                     <input type="text" placeholder="Jawaban keamanan" name="security_answer" required>
                 </div>
-                <div>
+                <!-- <div>
                     <p><a href="forgot-password.php">Lupa password?</a></p>
-                </div>
+                </div> -->
                 <div class="input-group">
                     <button class="btn" type="submit" name="register">Buat</button>
                 </div>

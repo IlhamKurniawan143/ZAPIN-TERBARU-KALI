@@ -32,9 +32,9 @@
                 <div class="input-group">
                     <input type="password" placeholder="Masukkan password" name="password" />
                 </div>
-                <p class="login-register-text">
+                <!-- <p class="login-register-text">
                     <a href="forgot-password.php">Lupa Password?</a>
-                </p>
+                </p> -->
                 <div class="input-group">
                     <button class="btn" type="submit" name="Login">Masuk</button>
                 </div>

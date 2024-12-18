@@ -135,7 +135,7 @@ class Fitur extends BaseController
     public function logout()
     {
         session()->destroy(); // Menghapus semua data sesi
-        return redirect()->to('login'); // Mengarahkan pengguna ke halaman login
+        return redirect()->to('/'); // Mengarahkan pengguna ke halaman login
     }
     public function buatkelas()
     {
