@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Controllers;
 
@@ -6,8 +6,11 @@ use App\Models\ClassModel;
 use App\Models\KelasModel;
 use App\Models\AnggotaModel;
 use App\Models\TugasModel;
-class Fitur extends BaseController{
-    public function gabungKelas(){
+
+class Fitur extends BaseController
+{
+    public function gabungKelas()
+    {
 
         $session = session();
 
@@ -76,44 +79,44 @@ class Fitur extends BaseController{
         ]);
     }
 
-   public function createTask($class_id)
-{
-    $session = session();
+    public function createTask($class_id)
+    {
+        $session = session();
 
-    // Periksa role user
-    if ($session->get('role') !== 'pengajar') {
-        return redirect()->to("/kelas/$class_id");
-    }
-
-    $tugasModel = new TugasModel();
-
-    $task_name = $this->request->getPost('task_name');
-    $task_description = $this->request->getPost('task_description');
-    $attachment = $this->request->getFile('attachment');
-    $attachment_path = null;
-
-    // Proses upload file jika ada
-    if ($attachment && $attachment->isValid() && !$attachment->hasMoved()) {
-        // Tentukan folder tempat menyimpan file di public/uploads/
-        $path = FCPATH . 'uploads/' . date('Ymd'); // Folder berdasarkan tanggal di dalam public/uploads/
-        if (!is_dir($path)) {
-            mkdir($path, 0777, true); // Membuat folder jika belum ada
+        // Periksa role user
+        if ($session->get('role') !== 'pengajar') {
+            return redirect()->to("/kelas/$class_id");
         }
 
-        // Pindahkan file ke folder yang ditentukan
-        $attachment_path = 'uploads/' . date('Ymd') . '/' . $attachment->getClientName(); // Path relatif
+        $tugasModel = new TugasModel();
 
-        // Pindahkan file yang diupload ke path yang sudah ditentukan
-        $attachment->move($path, $attachment->getClientName());
+        $task_name = $this->request->getPost('task_name');
+        $task_description = $this->request->getPost('task_description');
+        $attachment = $this->request->getFile('attachment');
+        $attachment_path = null;
+
+        // Proses upload file jika ada
+        if ($attachment && $attachment->isValid() && !$attachment->hasMoved()) {
+            // Tentukan folder tempat menyimpan file di public/uploads/
+            $path = FCPATH . 'uploads/' . date('Ymd'); // Folder berdasarkan tanggal di dalam public/uploads/
+            if (!is_dir($path)) {
+                mkdir($path, 0777, true); // Membuat folder jika belum ada
+            }
+
+            // Pindahkan file ke folder yang ditentukan
+            $attachment_path = 'uploads/' . date('Ymd') . '/' . $attachment->getClientName(); // Path relatif
+
+            // Pindahkan file yang diupload ke path yang sudah ditentukan
+            $attachment->move($path, $attachment->getClientName());
+        }
+
+        // Simpan tugas ke database
+        $tugasModel->saveTask($class_id, $task_name, $task_description, $attachment_path);
+
+        return redirect()->to("/dashboard_pengajar/detailkelas/$class_id")->with('message', 'Tugas berhasil dibuat!');
     }
 
-    // Simpan tugas ke database
-    $tugasModel->saveTask($class_id, $task_name, $task_description, $attachment_path);
-
-    return redirect()->to("/dashboard_pengajar/detailkelas/$class_id")->with('message', 'Tugas berhasil dibuat!');
-}
-
-public function profile()
+    public function profile()
     {
         // Memeriksa apakah pengguna sudah login
         if (!session()->has('is_login')) {
@@ -134,10 +137,85 @@ public function profile()
         session()->destroy(); // Menghapus semua data sesi
         return redirect()->to('login'); // Mengarahkan pengguna ke halaman login
     }
-    public function buatkelas(){
+    public function buatkelas()
+    {
         return view('fitur/buat_kelas');
     }
+    public function edittugaskelas($task_id)
+    {
+        $tugasModel = new \App\Models\TugasModel();
+        $task = $tugasModel->find($task_id);
+
+        if (!$task) {
+            return redirect()->back()->with('error', 'Tugas tidak ditemukan.');
+        }
+
+        return view('fitur/edit_tugas', [
+            'task' => $task,
+        ]);
+    }
+
+    public function updateTask($task_id)
+    {
+        $session = session();
+        $tugasModel = new \App\Models\TugasModel();
+
+        // Periksa role user
+        if ($session->get('role') !== 'pengajar') {
+            return redirect()->to('/dashboard_pengajar')->with('error', 'Akses ditolak.');
+        }
+
+        // Validasi input
+        $validationRules = [
+            'task_name' => 'required',
+            'task_description' => 'required',
+            'attachment' => [
+                'rules' => 'permit_empty|uploaded[attachment]|mime_in[attachment,application/pdf,image/png,image/jpeg]|max_size[attachment,2048]',
+                'errors' => [
+                    'uploaded' => 'File lampiran harus diunggah.',
+                    'mime_in' => 'Jenis file yang diunggah tidak valid (hanya PDF, PNG, atau JPEG).',
+                    'max_size' => 'Ukuran file maksimal adalah 2MB.',
+                ],
+            ],
+        ];
+
+        if (!$this->validate($validationRules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        // Ambil data tugas dari form
+        $data = [
+            'task_name' => $this->request->getPost('task_name'),
+            'task_description' => $this->request->getPost('task_description'),
+        ];
+
+        $file = $this->request->getFile('attachment');
+
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            // Hapus file lama jika ada
+            $existingTask = $tugasModel->find($task_id);
+            if ($existingTask && !empty($existingTask['attachment_path']) && file_exists(FCPATH . $existingTask['attachment_path'])) {
+                unlink(FCPATH . $existingTask['attachment_path']);
+            }
+
+            // Simpan file baru
+            $uploadPath = FCPATH . 'uploads/' . date('Ymd');
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0777, true);
+            }
+
+            $fileName = $file->getClientName();
+            $file->move($uploadPath, $fileName);
+
+            $data['attachment_path'] = 'uploads/' . date('Ymd') . '/' . $fileName;
+        }
+
+        // Update tugas ke database
+        if ($tugasModel->update($task_id, $data)) {
+            return redirect()->to('/dashboard_pengajar')
+                ->with('success', 'Tugas berhasil diperbarui.');
+        }
+
+        return redirect()->back()->with('error', 'Gagal memperbarui tugas. Coba lagi.');
+    }
 }
-
-
-?>

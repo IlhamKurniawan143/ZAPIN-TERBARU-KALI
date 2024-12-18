@@ -20,7 +20,8 @@ $routes->post('/dashboard_pengajar/create-kelas', 'Fitur::createKelas');
 $routes->post('/kelas/createTask/(:num)', 'Fitur::createTask/$1');
 $routes->get('/dashboard_pengajar/buatkelas', 'Fitur::buatkelas');
 $routes->post('logout', 'Fitur::logout');
-
+$routes->get('/dashboard_pengajar/detailkelas/tugaskelas/(:num)', 'Fitur::edittugaskelas/$1');
+$routes->post('/kelas/updateTask/(:num)', 'Fitur::updateTask/$1');
 
 
 $routes->setAutoRoute(true);
