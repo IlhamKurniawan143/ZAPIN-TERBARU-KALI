@@ -134,6 +134,9 @@ public function profile()
         session()->destroy(); // Menghapus semua data sesi
         return redirect()->to('login'); // Mengarahkan pengguna ke halaman login
     }
+    public function buatkelas(){
+        return view('fitur/buat_kelas');
+    }
 }
 
 

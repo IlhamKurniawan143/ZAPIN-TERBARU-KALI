@@ -18,6 +18,7 @@ $routes->get('/dashboard_pengajar/detailkelas/(:num)', 'Fitur::detailKelas/$1');
 $routes->get('/dashboard_pengajar/profile', 'Fitur::profile');
 $routes->post('/dashboard_pengajar/create-kelas', 'Fitur::createKelas');
 $routes->post('/kelas/createTask/(:num)', 'Fitur::createTask/$1');
+$routes->get('/dashboard_pengajar/buatkelas', 'Fitur::buatkelas');
 $routes->post('logout', 'Fitur::logout');
 
 
