@@ -57,7 +57,7 @@
                 <div class="input-group">
                     <button class="btn" type="submit" name="register">Buat</button>
                 </div>
-                <p class="login-register-text">Sudah punya akun? <a href="<?= base_url('/login') ?>">Log in</a></p>
+                <p class="login-register-text">Sudah punya akun? <a href="<?= base_url('/') ?>">Log in</a></p>
             </form>
         </div>
     </div>

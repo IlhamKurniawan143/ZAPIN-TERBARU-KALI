@@ -6,42 +6,101 @@ use App\Models\ClassModel;
 use App\Models\KelasModel;
 use App\Models\AnggotaModel;
 use App\Models\TugasModel;
+use App\Models\UserModel;
 
 class Fitur extends BaseController
 {
-    public function gabungKelas()
+    public function nampilKelas()
     {
+        return view('fitur/gabung_kelas');
+    }
+    
+    public function gabungKelas()
+{
+    $session = session();
 
-        $session = session();
-
-        // cek apakah user sudah login dan memiliki role 'pengajar' ataupun 'pegawai'
-        if (!$session->get('is_login') || $session->get('role') !== 'pengajar' && $session->get('role') !== 'pegawai') {
-            return redirect()->to('/login');
-        }
-
-        $joinMessage = '';
-
-        // if ($this->request->getPost('join_class')) {
-        if ($this->request->getMethod() === 'post') {
-            $classCode = $this->request->getPost('class_code');
-            $userId = $session->get('user_id');
-            $role = $session->get('role');
-
-            $classModel = new ClassModel();
-            $result = $classModel->gabungkelas($userId, $classCode, $role);
-
-            $joinMessage = $result['message'];
-        }
-
-        return view('fitur/gabung_kelas', ['join_message' => $joinMessage]);
+    // Cek apakah user sudah login dan memiliki role 'pengajar' atau 'pegawai'
+    if (!$session->get('is_login') || !in_array($session->get('role'), ['pengajar', 'pegawai'])) {
+        return redirect()->to('/login')->with('error', 'Anda harus login terlebih dahulu.');
     }
 
-    // public function buatKelas(){
-    //     $session = session();
+    $joinMessage = '';
+    $messageType = 'error'; // Default to error, will change to success if operation succeeds
 
-    //     // cek apakah user sudah login dan memiliki role 'pengajar'
-    //     if (!$session->get('is_login') || $session->get('role') === 'pengajar');
-    // }
+    if ($this->request->getMethod() === 'post') {
+        // Ambil id user dari session
+        $userId = $session->get('user_id');
+        $role = $session->get('role');
+        $classCode = $this->request->getPost('class_code');
+
+        // Validasi input
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'class_code' => 'required|min_length[5]|max_length[10]'
+        ]);
+
+        if (!$validation->withRequest($this->request)->run()) {
+            // Jika validasi gagal
+            $joinMessage = $validation->getErrors()['class_code'] ?? 'Kode kelas tidak valid';
+            return redirect()->back()->with('error', $joinMessage);
+        }
+
+        // Inisialisasi model
+        $classModel = new ClassModel();
+        $classMemberModel = new AnggotaModel();
+        $userModel = new UserModel();
+
+        try {
+            // Cek apakah kelas ada berdasarkan kode kelas
+            $class = $classModel->where('class_code', $classCode)->first();
+
+            // Jika kelas tidak ditemukan
+            if (!$class) {
+                return redirect()->back()->with('error', 'Kode kelas tidak ditemukan.');
+            }
+
+            // Cek apakah user sudah terdaftar
+            $user = $userModel->find($userId);
+            if (!$user) {
+                return redirect()->back()->with('error', 'Pengguna tidak ditemukan.');
+            }
+
+            // Cek apakah user sudah bergabung dengan kelas ini
+            $existingMembership = $classMemberModel->where('pegawai_id', $userId)
+                ->where('class_id', $class['id'])
+                ->where('role', $role)
+                ->first();
+
+            if ($existingMembership) {
+                return redirect()->back()->with('warning', 'Anda sudah tergabung di kelas ini.');
+            }
+
+            // Tambahkan user ke kelas
+            $result = $classMemberModel->insert([
+                'pegawai_id' => $userId,
+                'class_id' => $class['id'],
+                'role' => $role,
+            ]);
+
+            // Cek apakah insert berhasil
+            if ($result) {
+                return redirect()->back()->with('success', 'Berhasil bergabung ke kelas!');
+            } else {
+                return redirect()->back()->with('error', 'Gagal bergabung ke kelas. Silakan coba lagi.');
+            }
+
+        } catch (\Exception $e) {
+            // Tangani kesalahan yang tidak terduga
+            log_message('error', 'Gabung Kelas Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan sistem. Silakan hubungi administrator.');
+        }
+    }
+
+    // Jika bukan metode POST
+    return redirect()->back()->with('error', 'Metode permintaan tidak valid.');
+}
+
+    
 
 
     public function detailKelas($class_id)
@@ -137,10 +196,58 @@ class Fitur extends BaseController
         session()->destroy(); // Menghapus semua data sesi
         return redirect()->to('/'); // Mengarahkan pengguna ke halaman login
     }
-    public function buatkelas()
+
+    public function buatKelas()
     {
-        return view('fitur/buat_kelas');
+        // Check if the user is logged in and is a pengajar
+        if (!session()->get('is_login') || session()->get('role') != 'pengajar') {
+            return redirect()->to('login');
+        }
+
+        // Display the form with any potential messages
+        return view('fitur/buat_kelas', [
+            'create_message' => session()->getFlashdata('create_message')
+        ]);
     }
+
+    public function createKelas()
+    {
+        // Validate input
+        $class_name = $this->request->getPost('class_name');
+        $class_description = $this->request->getPost('class_description');
+        $pengajar_id = session()->get('user_id');
+
+        // Generate a unique class code
+        $class_code = substr(md5(uniqid(rand(), true)), 0, 8);
+
+        // Check if fields are not empty
+        if (!empty($class_name) && !empty($class_description)) {
+            // Load model
+            $classModel = new ClassModel();
+
+            // Prepare data
+            $data = [
+                'class_name' => $class_name,
+                'class_description' => $class_description,
+                'pengajar_id' => $pengajar_id,
+                'class_code' => $class_code
+            ];
+
+            // Insert into the database
+            if ($classModel->insert($data)) {
+                session()->setFlashdata('create_message', "Kelas berhasil dibuat! Kode Kelas: $class_code");
+            } else {
+                session()->setFlashdata('create_message', "Gagal membuat kelas.");
+            }
+
+            // Redirect back to the create class page
+            return redirect()->to('/dashboard-pengajar/buatkelas');
+        } else {
+            session()->setFlashdata('create_message', "Nama kelas dan deskripsi harus diisi!");
+            return redirect()->to('/dashboard-pengajar/buatkelas');
+        }
+    }
+
     public function edittugaskelas($task_id)
     {
         $tugasModel = new \App\Models\TugasModel();

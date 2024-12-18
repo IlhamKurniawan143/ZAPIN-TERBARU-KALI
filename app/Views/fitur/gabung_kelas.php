@@ -6,7 +6,6 @@
     <div class="content">
         <div class="card">
             <h2 class="card-title">Gabung Kelas</h2>
-            <p class="card-message"><?= esc($join_message) ?></p>
             <form action="<?= base_url('fitur/gabungKelas') ?>" method="post" class="form-container">
                 <?= csrf_field() ?>
                 <div class="input-group">

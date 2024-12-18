@@ -301,7 +301,10 @@
                             <?php if ($task['attachment_path']): ?>
                                 <br><a href="<?= base_url($task['attachment_path']) ?>" target="_blank">Lihat Lampiran</a>
                             <?php endif; ?>
-                            <br><a href="<?= base_url("dashboard_pengajar/detailkelas/tugaskelas/" . $task['id']) ?>" class="btn">Edit</a> <!-- Perbaikan Edit Link -->
+
+                            <?php if ($user_role === 'pengajar'): ?>
+                                <br><a href="<?= base_url("dashboard_pengajar/detailkelas/tugaskelas/" . $task['id']) ?>" class="btn">Edit</a> <!-- Perbaikan Edit Link -->
+                            <?php endif; ?>
                         </li>
                     <?php endforeach; ?>
                 </ul>

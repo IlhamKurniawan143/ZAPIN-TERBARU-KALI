@@ -7,6 +7,8 @@ use CodeIgniter\Model;
 class AnggotaModel extends Model
 {
     protected $table = 'class_members';
+    protected $primaryKey = 'id';
+    protected $allowedFields = ['pegawai_id', 'class_id', 'role'];
 
     public function getMembersByClassId($class_id)
     {

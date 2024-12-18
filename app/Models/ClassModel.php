@@ -8,15 +8,8 @@ class ClassModel extends Model
 {
     protected $table = 'classes';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['class_name', 'class_description'];
+    protected $allowedFields = ['class_name', 'class_description', 'pengajar_id', 'class_code'];
 
-    //  public function __construct()
-    // {
-    //     // Memastikan user sudah login dan berperan sebagai pengajar
-    //     if (!session()->has('is_login') || session()->get('role') != 'pengajar') {
-    //         return redirect()->to('login');
-    //     }
-    // }
     public function getClassesByPegawaiId($pegawai_id)
     {
         return $this->select('classes.*')

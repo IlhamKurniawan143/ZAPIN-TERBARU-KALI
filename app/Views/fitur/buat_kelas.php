@@ -5,12 +5,9 @@
     <main class="content">
         <h2>Buat Kelas Baru</h2>
 
-        <!-- Menampilkan pesan jika ada -->
-        <?php if (!empty($create_message)): ?>
-            <i><?= esc($create_message); ?></i>
-        <?php endif; ?>
+        <i><?= isset($create_message) ? $create_message : '' ?></i>
 
-        <form action="<?= site_url('/dashboard_pengajar/create-kelas'); ?>" method="POST">
+        <form action="<?= site_url('/fitur/buat_kelas'); ?>" method="POST">
             <div class="input-group">
                 <label for="class_name">Nama Kelas</label>
                 <input type="text" name="class_name" id="class_name" required>
@@ -27,6 +24,8 @@
         </form>
     </main>
 </div>
+
+
 <style>
     /* Wrapper untuk form */
     .wrapper {

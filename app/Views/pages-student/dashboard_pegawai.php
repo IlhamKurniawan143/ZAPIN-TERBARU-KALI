@@ -11,7 +11,7 @@
                     <div class="class-box">
                         <h3><?= $class['class_name'] ?></h3>
                         <p><?= $class['class_description'] ?></p>
-                        <a href="#" class="btn">Lihat Detail</a>
+                        <a href="/dashboard_pegawai/detailkelas/<?= $class['id'] ?>" class="btn">Lihat Detail</a>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
