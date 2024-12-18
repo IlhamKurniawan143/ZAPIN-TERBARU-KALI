@@ -32,13 +32,15 @@ use Config\Session;
 
         <ul>
             <li>
-                <a href="<?= session()->get('role') === 'pegawai'? ('/dashboard_pegawai') : ('/dashboard_pengajar'); ?>"><i class="fa fa-home"></i>Beranda</a>
+                <a
+                    href="<?= session()->get('role') === 'pegawai'? ('/dashboard_pegawai') : ('/dashboard_pengajar'); ?>"><i
+                        class="fa fa-home"></i>Beranda</a>
             </li>
             <li><a href="<?= ('/gabung_kelas') ?>"><i class="fa fa-book"></i>Gabung Kelas</a></li>
             <?php if (session()->get('role') === 'pengajar'): ?>
-                <li><a href="#"><i class="fa fa-pencil-alt"></i>Buat Kelas</a></li>
+            <li><a href="/dashboard_pengajar/buatkelas"><i class="fa fa-pencil-alt"></i>Buat Kelas</a></li>
             <?php endif; ?>
-            <li><a href="#"><i class="fa fa-user"></i>Profil</a></li>
+            <li><a href="/dashboard_pengajar/profile"><i class="fa fa-user"></i>Profil</a></li>
         </ul>
     </aside>
 
